@@ -7,39 +7,64 @@ def clean_file(filename):
         print(f"Error: File '{filename}' not found.")
         return
 
-    # Pattern to match: --- Extracting Text: Page [any number] ---
-    # \d+ matches one or more digits
+    # Pattern for page headers: --- Extracting Text: Page [number] ---
     page_header_pattern = re.compile(r"--- Extracting Text: Page \d+ ---")
 
     cleaned_lines = []
 
+    # This flag tracks if we are currently inside the "Farmer's Insurance" junk block
+    in_skipped_block = False
+
     with open(filename, 'r') as f:
-        # Read all lines into a list
         lines = f.readlines()
 
-    # 1. Remove the first line by slicing the list from index 1 onwards
+    if not lines:
+        print("File is empty.")
+        return
+
+    # 1. Remove the first line (index 0)
     remaining_lines = lines[1:]
 
     for line in remaining_lines:
         stripped_line = line.strip()
 
-        # 2. Remove empty lines
+        # 2. Block Removal Logic (Farmers Insurance -> Import Template)
+        # Check if we hit the start of the junk block
+        if stripped_line.startswith("Soa Farmers Insurance Exchange"):
+            in_skipped_block = True
+            continue # Skip this line
+
+        # Check if we hit the end of the junk block
+        if in_skipped_block:
+            if "myclaim@farmersinsurance.com" in stripped_line:
+                in_skipped_block = False
+            continue # Skip every line while the flag is True
+
+        # 3. Standard Cleaning
+        # Remove empty lines
         if not stripped_line:
             continue
 
-        # 3. Remove lines matching the Page Header pattern
+        # Remove Page Headers
         if page_header_pattern.search(stripped_line):
             continue
 
-        # If it passes all checks, keep the original line (with its newline)
+        if "XactContents Import Template" in stripped_line:
+            continue
+
+        if "COLIN_SHUKIE11" in stripped_line:
+            continue
+
+        # If we made it here, the line is "clean"
         cleaned_lines.append(line)
 
-    # Output the result
+    # Save the output
     output_filename = f"cleaned_{filename}"
     with open(output_filename, 'w') as f:
         f.writelines(cleaned_lines)
 
-    print(f"Success! Cleaned file saved as: {output_filename}")
+    print(f"Success! Processed {len(lines)} lines down to {len(cleaned_lines)}.")
+    print(f"Cleaned file saved as: {output_filename}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
