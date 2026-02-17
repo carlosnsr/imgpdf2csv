@@ -55,6 +55,9 @@ def clean_file(filename):
         if "COLIN_SHUKIE11" in stripped_line:
             continue
 
+        if stripped_line.upper().startswith("CONTINUED - "):
+            line = line[12:]
+
         # If we made it here, the line is "clean"
         cleaned_lines.append(line)
 
