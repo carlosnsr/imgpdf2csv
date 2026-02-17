@@ -40,7 +40,7 @@ def main():
         doc = Image(img_path)
 
         # Extract tables
-        tables = doc.extract_tables(ocr=ocr, implicit_rows=True, borderless=True)
+        tables = doc.extract_tables(ocr=ocr, implicit_rows=True, borderless_tables=True)
 
         print(f"Page {i+1}: Found {len(tables)} table(s).")
 
