@@ -27,3 +27,11 @@ pip install --upgrade pip
 # install necessary libraries
 pip install --no-cache-dir img2table pdf2image pandas pytesseract
 ```
+
+# imgpdf2txt
+
+```
+sudo dnf install tesseract tesseract-langpack-eng poppler-utils -y
+pip install pytesseract pdf2image
+
+```
