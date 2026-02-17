@@ -1,85 +1,115 @@
 import os
 import sys
 import cv2
-import numpy as np
+import pytesseract
+from pytesseract import Output
 from pdf2image import convert_from_path
-from img2table.document import Image
-from img2table.ocr import TesseractOCR
 import pandas as pd
 
+# CONFIGURATION: List your exact header names here
+TARGET_HEADERS = ["Date", "Description", "Reference", "Amount"]
+
+def extract_structured_data(img_path):
+    # Load image
+    img = cv2.imread(img_path)
+    # Get all text data with coordinates
+    d = pytesseract.image_to_data(img, output_type=Output.DICT)
+
+    n_boxes = len(d['level'])
+    found_headers = {}
+    all_data_points = []
+
+    # 1. Locate Headers and collect all text
+    for i in range(n_boxes):
+        text = d['text'][i].strip()
+        if not text: continue
+
+        # Store all text found for later row-clustering
+        all_data_points.append({
+            'text': text,
+            'x': d['left'][i],
+            'y': d['top'][i],
+            'w': d['width'][i],
+            'h': d['height'][i]
+        })
+
+        # Check if this word is one of our headers
+        for target in TARGET_HEADERS:
+            if target.lower() in text.lower():
+                found_headers[target] = d['left'][i]
+
+    if not found_headers:
+        return None
+
+    # 2. Sort data into rows based on Y coordinate (with 10px tolerance)
+    all_data_points.sort(key=lambda r: r['y'])
+    rows = []
+    if all_data_points:
+        current_row = [all_data_points[0]]
+        for p in all_data_points[1:]:
+            if abs(p['y'] - current_row[-1]['y']) <= 15: # 15px vertical tolerance
+                current_row.append(p)
+            else:
+                rows.append(current_row)
+                current_row = [p]
+        rows.append(current_row)
+
+    # 3. Map Row items to Header columns
+    final_table = []
+    header_x_positions = sorted(found_headers.values())
+
+    for row in rows:
+        row_data = {h: "" for h in TARGET_HEADERS}
+        row_y = row[0]['y']
+
+        # Skip rows that are above our headers
+        if row_y <= min([d['y'] for d in all_data_points if d['text'] in TARGET_HEADERS], default=0):
+            continue
+
+        for item in row:
+            # Find which header's X-coordinate this item is closest to
+            best_header = None
+            min_dist = 9999
+            for h_name, h_x in found_headers.items():
+                dist = abs(item['x'] - h_x)
+                if dist < min_dist:
+                    min_dist = dist
+                    best_header = h_name
+
+            if best_header:
+                row_data[best_header] += " " + item['text']
+
+        final_table.append(row_data)
+
+    return pd.DataFrame(final_table)
+
 def main():
-    # 1. Handle Command Line Arguments
     if len(sys.argv) < 2:
-        print("Usage: python extract.py <path_to_pdf> [start_page]")
+        print("Usage: python extract.py <pdf> [start_page]")
         sys.exit(1)
 
     pdf_path = sys.argv[1]
+    start_page = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
-    # Check for optional start page (default to 1)
-    try:
-        start_page = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-    except ValueError:
-        print("Error: Start page must be a number.")
-        sys.exit(1)
+    print(f"Converting PDF {pdf_path}...")
+    pages = convert_from_path(pdf_path, dpi=300, first_page=start_page)
 
-    if not os.path.exists(pdf_path):
-        print(f"Error: File '{pdf_path}' not found.")
-        sys.exit(1)
-
-    output_folder = "extracted_tables"
-    os.makedirs(output_folder, exist_ok=True)
-
-    # 2. Convert PDF pages to Images
-    print(f"Processing {pdf_path} starting from page {start_page}...")
-    try:
-        # Optimization: We only convert the pages we actually need
-        # first_page and last_page are 1-indexed in convert_from_path
-        pages = convert_from_path(pdf_path, dpi=600, first_page=start_page)
-    except Exception as e:
-        print(f"Failed to convert PDF: {e}")
-        sys.exit(1)
-
-    # 3. Initialize OCR Engine
-    ocr = TesseractOCR(n_threads=4, lang="eng")
-
-    # 4. Process the sliced list of pages
     for i, page in enumerate(pages):
-        # Calculate actual page number for labels
-        actual_page_num = i + start_page
-        img_path = f"temp_page_{actual_page_num}.jpg"
-        page.save(img_path, "JPEG")
+        page_num = i + start_page
+        temp_img = f"temp_p{page_num}.png"
+        page.save(temp_img, "PNG")
 
-        # Image Processing
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-        processed_img = cv2.adaptiveThreshold(
-            img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY, 11, 2
-        )
-        cv2.imwrite(img_path, processed_img)
+        df = extract_structured_data(temp_img)
 
-        doc = Image(img_path)
+        if df is not None and not df.empty:
+            out_name = f"extracted_tables/page_{page_num}.csv"
+            df.to_csv(out_name, index=False)
+            print(f"Page {page_num}: Success! Saved to {out_name}")
+        else:
+            print(f"Page {page_num}: No matching headers found.")
 
-        # Extraction
-        tables = doc.extract_tables(
-            ocr=ocr,
-            implicit_rows=True,
-            borderless_tables=True,
-            min_confidence=30
-        )
-
-        print(f"Page {actual_page_num}: Found {len(tables)} table(s).")
-
-        for idx, table in enumerate(tables):
-            df = pd.DataFrame(table.content)
-            base_name = os.path.splitext(os.path.basename(pdf_path))[0]
-            csv_name = f"{output_folder}/{base_name}_p{actual_page_num}_t{idx+1}.csv"
-
-            df.to_csv(csv_name, index=False, header=False)
-            print(f"  -> Saved: {csv_name}")
-
-        os.remove(img_path)
-
-    print("\nProcessing Complete!")
+        os.remove(temp_img)
 
 if __name__ == "__main__":
+    os.makedirs("extracted_tables", exist_ok=True)
     main()
