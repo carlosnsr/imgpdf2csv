@@ -2,6 +2,8 @@ import sys
 import os
 import re
 
+EXCLUDES = {"fo\"", "FARMERS", "INSURANCE"}
+
 def clean_file(filename):
     if not os.path.exists(filename):
         print(f"Error: File '{filename}' not found.")
@@ -30,7 +32,7 @@ def clean_file(filename):
 
         # 2. Block Removal Logic (Farmers Insurance -> Import Template)
         # Check if we hit the start of the junk block
-        if stripped_line.startswith("Soa Farmers Insurance Exchange"):
+        if stripped_line.startswith("Soa Farmers Insurance Exchange") or stripped_line.startswith("Farmers Insurance Exchange"):
             in_skipped_block = True
             continue # Skip this line
 
@@ -47,6 +49,9 @@ def clean_file(filename):
 
         # Remove Page Headers
         if page_header_pattern.search(stripped_line):
+            continue
+
+        if stripped_line in EXCLUDES:
             continue
 
         if "XactContents Import Template" in stripped_line:
