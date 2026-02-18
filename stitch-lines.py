@@ -113,6 +113,12 @@ def stitch_lines(input_file):
                 print(f"{i}: ORPHAN_HEADERS: {headers}")
             elif is_item:
                 # hopefully it's another description line
+                # but first check if it's an orphan
+                if re.match(r"^\w+%", line):
+                    is_item = False
+                    print(f"{i}: BLIP: {line}")
+                    continue
+
                 # could have been interrupted by a new header
                 if not row["items"]:
                     print(f"{i} INFO: interrupted by header")
