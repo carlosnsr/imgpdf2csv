@@ -20,7 +20,7 @@ def make_db_row(type_):
                 # if < X fields
                     # is incomplete
                     # if find a header later on, add it to the headers
-        items=dict(rows=[], status="incomplete")
+        items=dict(rows=[], status="incomplete"),
         # items
             # status: complete, incomplete
             # rows: []
@@ -28,6 +28,7 @@ def make_db_row(type_):
                 # if < X fields
                     # is incomplete
                     # if find an item field later on, add it to the items
+        totals=""
     )
 
 def stitch_lines(input_file):
@@ -74,6 +75,12 @@ def stitch_lines(input_file):
             row["items"]["rows"].append(item)
 
             print(f"{i}: ITEM: {item}")
+        elif line.startswith("Totals:"):
+            # found a totals line
+            row = db[-1]
+            row["totals"] = line
+
+            print(f"{i}: TOTALS: {line}")
         else:
             print(f"{i}: SKIPPED: {line}")
 
