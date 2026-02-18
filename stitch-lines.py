@@ -1,6 +1,10 @@
 import csv
 import re
 import sys
+from more_itertools import peekable
+
+def next_(cursor, i):
+    return (next(cursor), i + 1)
 
 def make_db_row(type_):
     return dict(
@@ -30,29 +34,33 @@ def stitch_lines(input_file):
     with open(input_file, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
 
-    db = []
-    # run through once collecting headers
-    i = 1 # The first line is the beginning of a headers
-    while i < len(lines):
-        line = lines[i]
+    cursor = peekable(lines)
 
-        if line.startswith("QUANTITY"):
+    db = []
+    i = 0
+    # run through once collecting headers
+    while cursor:
+        line, i = next_(cursor, i)
+
+        if cursor.peek("").startswith("QUANTITY"):
             # found a header line
-            type_ = lines[i - 1]
+            type_ = line
             row = make_db_row(type_)
 
             # all the possible headers
+            line, i = next_(cursor, i)
             pattern = r"QUANTITY|UNIT|TAX|RCV|AGE/LIFE|COND\.|DEP %|DEPREC\.|ACV"
-            other_headers = re.findall(pattern, lines[i])
+            other_headers = re.findall(pattern, line)
             headers = [type_] + other_headers
+            # add to the db
             row["header"]["fields"] = headers
             if len(headers) == 10:
                 row["header"]["status"] = "complete"
+            db.append(row)
 
             print(f"{i}: HEADERS: {headers}")
         else:
             print(f"{i}: SKIPPED: {line}")
-        i += 1
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

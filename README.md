@@ -25,7 +25,7 @@ source venv/bin/activate
 # upgrade pip (if necessary)
 pip install --upgrade pip
 # install necessary libraries
-pip install --no-cache-dir img2table pdf2image pandas pytesseract
+pip install --no-cache-dir img2table pdf2image pandas pytesseract more-itertools
 ```
 
 # imgpdf2txt
