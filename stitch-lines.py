@@ -200,9 +200,14 @@ def stitch_lines(input_file):
             elif is_item:
                 # hopefully it's another description line
                 # but first check if it's an orphan
-                if re.match(r"^\w+%", line):
+                if re.match(DEP_RE, line):
                     is_item = False
-                    print(f"{i}: BLIP: {line}")
+                    print(f"{i}: BLIP:DEPR: {line}")
+                    continue
+
+                if re.match(COND_RE, line):
+                    is_item = False
+                    print(f"{i}: BLIP:COND: {line}")
                     continue
 
                 # could have been interrupted by a new header
