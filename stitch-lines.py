@@ -108,13 +108,11 @@ def stitch_lines(input_file):
             row = db[-1]
             headers = extract_headers(line)
             if headers:
+                row["headers"].extend(headers)
+                mark_row_complete(row)
                 print(f"{i}: ORPHAN_HEADERS: {headers}")
-            else:
-                skipped = True
-        elif is_item:
-            # is hopefully another description line
-            if db:
-                row = db[-1]
+            elif is_item:
+                # hopefully it's another description line
                 # could have been interrupted by a new header
                 if not row["items"]:
                     print(f"{i} INFO: interrupted by header")
@@ -128,7 +126,6 @@ def stitch_lines(input_file):
                     print(f"{i} ERROR: row[items] is empty")
                     skipped = True
             else:
-                print(f"{i} ERROR: DB empty")
                 skipped = True
         else:
             skipped = True
