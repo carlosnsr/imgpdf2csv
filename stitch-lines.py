@@ -39,12 +39,14 @@ def stitch_lines(input_file):
 
     db = []
     i = 0
+    is_item = False
     # run through once collecting headers
     while cursor:
         line, i = next_(cursor, i)
 
         if cursor.peek("").startswith("QUANTITY"):
             # found a header line
+            is_item = False
             type_ = line
             row = make_db_row(type_)
 
@@ -61,6 +63,7 @@ def stitch_lines(input_file):
 
             print(f"{i}: HEADERS: {headers}")
         elif re.match(r"^\d+\. \w+", line):
+            is_item = True
             # found a new item
             # description
             descriptions = [line]
@@ -77,10 +80,17 @@ def stitch_lines(input_file):
             print(f"{i}: ITEM: {item}")
         elif line.startswith("Totals:"):
             # found a totals line
+            is_item = False
             row = db[-1]
             row["totals"] = line
 
             print(f"{i}: TOTALS: {line}")
+        elif is_item:
+            # is hopefully another description line
+            row = db[-1]
+            item = row["items"]["rows"][-1]
+            item[0].append(line)
+            print(f"{i}: ITEM_DESC: {item}")
         else:
             print(f"{i}: SKIPPED: {line}")
 
