@@ -16,6 +16,7 @@ def make_item_row():
 def make_db_row(type_):
     return dict(
         type_=type_, # type_: Living, etc.
+        is_headers_complete=False,
         is_complete=False,
             # False if:
                 # if len(headers) is not 10,
@@ -32,13 +33,21 @@ def make_db_row(type_):
         totals=""
     )
 
+EXPECTED_HEADERS = 10
+HEADER_PATTERN = r"QUANTITY|UNIT|TAX|RCV|AGE/LIFE|COND\.|DEP %|DEPREC\.|ACV"
+EXPECTED_DATA_SEGS = 13
+
 def mark_row_complete(db_row):
-    is_headers_complete = len(db_row["headers"]) == 10
+    is_headers_complete = len(db_row["headers"]) == EXPECTED_HEADERS
+    db_row["is_headers_complete"] = is_headers_complete
     db_row["is_complete"] = is_headers_complete
 
 def mark_item_complete(item):
-    is_data_complete = len(item["data"]) == 13
+    is_data_complete = len(item["data"]) == EXPECTED_DATA_SEGS
     item["is_complete"] = is_data_complete
+
+def extract_headers(line):
+    return re.findall(HEADER_PATTERN, line)
 
 def stitch_lines(input_file):
     with open(input_file, 'r') as f:
@@ -49,23 +58,20 @@ def stitch_lines(input_file):
     db = []
     i = 0
     is_item = False
-    is_header = False
+    skipped = False
     # run through once collecting headers
     while cursor:
         line, i = next_(cursor, i)
 
         if cursor.peek("").startswith("QUANTITY"):
             # found a header line
-            is_header = True
             is_item = False
             type_ = line
             row = make_db_row(type_)
 
             # all the possible headers
             line, i = next_(cursor, i)
-            pattern = r"QUANTITY|UNIT|TAX|RCV|AGE/LIFE|COND\.|DEP %|DEPREC\.|ACV"
-            other_headers = re.findall(pattern, line)
-            headers = [type_] + other_headers
+            headers = [type_] + extract_headers(line)
             # add to the db
             row["headers"] = headers
             mark_row_complete(row)
@@ -73,7 +79,6 @@ def stitch_lines(input_file):
 
             print(f"{i}: HEADERS: {headers}")
         elif re.match(r"^\d+\. \w+", line):
-            is_header = False
             is_item = True
             # found a new item
             item = make_item_row()
@@ -104,8 +109,20 @@ def stitch_lines(input_file):
             item = row["items"][-1]
             item["desc"].append(line)
             print(f"{i}: ITEM_DESC: {item}")
+        elif db:
+            # is it another header
+            row = db[-1]
+            headers = extract_headers(line)
+            if headers:
+                print(f"{i}: ORPHAN_HEADERS: {headers}")
+            else:
+                skipped = True
         else:
+            skipped = True
+
+        if skipped:
             print(f"{i}: SKIPPED: {line}")
+            skipped = False
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
