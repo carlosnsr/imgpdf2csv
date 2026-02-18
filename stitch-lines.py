@@ -63,10 +63,10 @@ AGEL_RE = rf"{CRUFT_RE}(?P<agel>\d+(?:\.\d+)*/(?:\d+ ?yrs|NA))"
 COND_RE = rf"{CRUFT_RE}(?P<cond>New|Below Avg\.|Above Avg\.|Avg\.)"
 DEP_RE = r"(?P<dep>\d+(?:\.\d+)*%(?: \[M\])*)"
 
-FULL_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE} {RCV_RE}\.? +{AGEL_RE} {COND_RE} {DEP_RE} {DEPREC_RE} {ACV_RE}"
-TO_COND_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE} {RCV_RE}\.? +{AGEL_RE} {COND_RE}"
-TO_AGEL_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE} {RCV_RE}\.? +{AGEL_RE}"
 MIN_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE}"
+TO_AGEL_RE = rf"{MIN_RE} {RCV_RE}\.? +{AGEL_RE}"
+TO_COND_RE = rf"{TO_AGEL_RE} {COND_RE}"
+FULL_RE = rf"{TO_COND_RE} {DEP_RE} {DEPREC_RE} {ACV_RE}"
 def process_data(line):
     # clean up OCR issues
     line = re.sub(r"/[l\\] ?yrs", "/1 yrs", line)
