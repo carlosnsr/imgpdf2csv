@@ -61,6 +61,12 @@ def clean_file(filename):
         if stripped_line.upper().startswith("CONTINUED - "):
             line = line[12:]
 
+        if stripped_line.startswith("Page: "):
+            continue
+
+        if re.match(r"^\d+/\d+/\d+ Page:", stripped_line):
+            continue
+
         # If we made it here, the line is "clean"
         cleaned_lines.append(line)
 
