@@ -49,6 +49,8 @@ def mark_item_complete(item):
 def extract_headers(line):
     return re.findall(HEADER_PATTERN, line)
 
+QUANTITY_PATTERN = r"(?P<quan>\d+\.\d+ EA)"
+
 def stitch_lines(input_file):
     with open(input_file, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
@@ -79,15 +81,21 @@ def stitch_lines(input_file):
 
             print(f"{i}: HEADERS: {headers}")
         elif re.match(r"^\d+\. \w+", line):
-            is_item = True
             # found a new item
+            is_item = True
             item = make_item_row()
             # description
             item["desc"].append(line)
 
+            # add to the most recent db row
+            row = db[-1]
+            row["items"].append(item)
+
+            print(f"{i}: ITEM: {item}")
+        elif re.match(QUANTITY_PATTERN, line):
             # the next line is the other fields
-            line, i = next_(cursor, i)
             segs = line.split(' ')
+            print(f"{i}: DATA: {line}")
             item["data"] = segs
             mark_item_complete(item)
 
