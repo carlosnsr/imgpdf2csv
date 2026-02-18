@@ -65,7 +65,7 @@ def stitch_lines(input_file):
 
         if cursor.peek("").startswith("QUANTITY"):
             # found a header line
-            is_item = False
+            # is_item = False # an item could be interrupted by a header
             type_ = line
             row = make_db_row(type_)
 
@@ -103,19 +103,32 @@ def stitch_lines(input_file):
             row["totals"] = line
 
             print(f"{i}: TOTALS: {line}")
-        elif is_item:
-            # is hopefully another description line
-            row = db[-1]
-            item = row["items"][-1]
-            item["desc"].append(line)
-            print(f"{i}: ITEM_DESC: {item}")
         elif db:
-            # is it another header
+            # is it another header?
             row = db[-1]
             headers = extract_headers(line)
             if headers:
                 print(f"{i}: ORPHAN_HEADERS: {headers}")
             else:
+                skipped = True
+        elif is_item:
+            # is hopefully another description line
+            if db:
+                row = db[-1]
+                # could have been interrupted by a new header
+                if not row["items"]:
+                    print(f"{i} INFO: interrupted by header")
+                    row = db[-2]
+
+                if row["items"]:
+                    item = row["items"][-1]
+                    item["desc"].append(line)
+                    print(f"{i}: ITEM_DESC: {item}")
+                else:
+                    print(f"{i} ERROR: row[items] is empty")
+                    skipped = True
+            else:
+                print(f"{i} ERROR: DB empty")
                 skipped = True
         else:
             skipped = True
