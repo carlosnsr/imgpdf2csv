@@ -168,7 +168,7 @@ def stitch_lines(input_file):
             row = db[-1]
             row["items"].append(item)
 
-            print(f"{i}: ITEM: {item}")
+            print(f"{i}: ITEM:NEW: {item}")
         elif re.match(QUANTITY_RE, line):
             # this is the data line (pricing, etc.)
             segs = process_data(line)
@@ -181,7 +181,7 @@ def stitch_lines(input_file):
             row = db[-1]
             row["items"].append(item)
 
-            print(f"{i}: ITEM: {item}")
+            print(f"{i}: ITEM:DATA: {item}")
         elif line.startswith("Totals:"):
             # found a totals line
             is_item = False
@@ -196,7 +196,7 @@ def stitch_lines(input_file):
             if headers:
                 row["headers"].extend(headers)
                 mark_row_complete(row)
-                print(f"{i}: ORPHAN_HEADERS: {headers}")
+                print(f"{i}: ORPHAN:HEADERS: {headers}")
             elif is_item:
                 # hopefully it's another description line
                 # but first check if it's an orphan
@@ -207,13 +207,13 @@ def stitch_lines(input_file):
 
                 # could have been interrupted by a new header
                 if not row["items"]:
-                    print(f"{i} INFO: interrupted by header")
+                    print(f"{i}: INFO: interrupted by header")
                     row = db[-2]
 
                 if row["items"]:
                     item = row["items"][-1]
                     item["desc"].append(line)
-                    print(f"{i}: ITEM_DESC: {item}")
+                    print(f"{i}: ITEM:DESC: {item}")
                 else:
                     print(f"{i} ERROR: row[items] is empty")
                     skipped = True
