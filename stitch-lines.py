@@ -6,6 +6,13 @@ from more_itertools import peekable
 def next_(cursor, i):
     return (next(cursor), i + 1)
 
+def make_item_row():
+    return dict(
+        desc=[],
+        data=None,
+        status="incomplete"
+    )
+
 def make_db_row(type_):
     return dict(
         metadata=dict(type_=type_, status="incomplete"),
@@ -20,14 +27,15 @@ def make_db_row(type_):
                 # if < X fields
                     # is incomplete
                     # if find a header later on, add it to the headers
-        items=dict(rows=[], status="incomplete"),
+        items=[],
         # items
-            # status: complete, incomplete
-            # rows: []
-                # expect X fields in each row
-                # if < X fields
-                    # is incomplete
-                    # if find an item field later on, add it to the items
+            # each item:
+                # description: array of strings
+                # data: array of data segments
+                # status:
+                    # complete if len(data segments) matches X
+                    # incomplete if < X
+                        # if find an item field later on, add it to the items
         totals=""
     )
 
@@ -65,17 +73,18 @@ def stitch_lines(input_file):
         elif re.match(r"^\d+\. \w+", line):
             is_item = True
             # found a new item
+            item = make_item_row()
             # description
-            descriptions = [line]
+            item["desc"].append(line)
 
             # the next line is the other fields
             line, i = next_(cursor, i)
             segs = line.split(' ')
+            item["data"] = segs
 
             # add to the most recent db row
-            item = [descriptions] + segs
             row = db[-1]
-            row["items"]["rows"].append(item)
+            row["items"].append(item)
 
             print(f"{i}: ITEM: {item}")
         elif line.startswith("Totals:"):
@@ -88,8 +97,8 @@ def stitch_lines(input_file):
         elif is_item:
             # is hopefully another description line
             row = db[-1]
-            item = row["items"]["rows"][-1]
-            item[0].append(line)
+            item = row["items"][-1]
+            item["desc"].append(line)
             print(f"{i}: ITEM_DESC: {item}")
         else:
             print(f"{i}: SKIPPED: {line}")
