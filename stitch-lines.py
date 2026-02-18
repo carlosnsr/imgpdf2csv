@@ -59,6 +59,21 @@ def stitch_lines(input_file):
             db.append(row)
 
             print(f"{i}: HEADERS: {headers}")
+        elif re.match(r"^\d+\. \w+", line):
+            # found a new item
+            # description
+            descriptions = [line]
+
+            # the next line is the other fields
+            line, i = next_(cursor, i)
+            segs = line.split(' ')
+
+            # add to the most recent db row
+            item = [descriptions] + segs
+            row = db[-1]
+            row["items"]["rows"].append(item)
+
+            print(f"{i}: ITEM: {item}")
         else:
             print(f"{i}: SKIPPED: {line}")
 
