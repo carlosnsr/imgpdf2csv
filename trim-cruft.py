@@ -64,6 +64,9 @@ def clean_file(filename):
         if stripped_line.startswith("Page: "):
             continue
 
+        if re.match(r"^\d+/\d+/\d+$", stripped_line):
+            continue
+
         if re.match(r"^\d+/\d+/\d+ Page:", stripped_line):
             continue
 
