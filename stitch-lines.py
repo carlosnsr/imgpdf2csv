@@ -33,6 +33,24 @@ def make_db_row(type_):
         totals=""
     )
 
+def get_last_item(db, i):
+    if not db:
+        print(f"{i}: ERROR: no DB")
+        return None
+
+    row = db[-1]
+    # could have been interrupted by a new header
+    if not row["items"]:
+        print(f"{i}: INFO: interrupted by header")
+        row = db[-2]
+
+    if row["items"]:
+        item = row["items"][-1]
+        return item
+    else:
+        print(f"{i} ERROR: row[items] is empty")
+        return None
+
 EXPECTED_HEADERS = 10
 EXPECTED_DATA_SEGS = 10 # 9 actual data, 1 state enum
 
@@ -210,17 +228,20 @@ def stitch_lines(input_file):
                     print(f"{i}: BLIP:COND: {line}")
                     continue
 
-                # could have been interrupted by a new header
-                if not row["items"]:
-                    print(f"{i}: INFO: interrupted by header")
-                    row = db[-2]
-
-                if row["items"]:
-                    item = row["items"][-1]
+                item = get_last_item(db, i)
+                if item:
                     item["desc"].append(line)
                     print(f"{i}: ITEM:DESC: {item}")
                 else:
-                    print(f"{i} ERROR: row[items] is empty")
+                    skipped = True
+            elif line.startswith("Orig"):
+                # deffo part of an item description
+                is_item = True
+                item = get_last_item(db, i)
+                if item:
+                    item["desc"].append(line)
+                    print(f"{i}: ITEM:DESC:ORIG: {item}")
+                else:
                     skipped = True
             else:
                 skipped = True
