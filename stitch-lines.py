@@ -31,6 +31,7 @@ def make_db_row(type_):
                 # if len(headers) is not EXPECTED_HEADERS,
                 # if len(any item) is not EXPECTED_DATA_SEGS
         headers=[],
+        orphaned_headers=[],
         items=[],
             # each item:
                 # description: array of strings
@@ -252,6 +253,7 @@ def stitch_lines(input_file):
             headers = extract_headers(line)
             if headers:
                 row["headers"].extend(headers)
+                row["orphaned_headers"].extend(headers)
                 mark_row_complete(row)
                 print_(f"{i}: ORPHAN:HEADERS: {headers}")
             # BEGIN: look for orphaned data items
