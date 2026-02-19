@@ -3,6 +3,10 @@ import re
 import sys
 from more_itertools import peekable
 
+def print_(str):
+    print(str)
+    None
+
 def next_(cursor, i):
     return (next(cursor), i + 1)
 
@@ -175,7 +179,7 @@ def stitch_lines(input_file):
             mark_row_complete(row)
             db.append(row)
 
-            print(f"{i}: HEADERS: {headers}")
+            print_(f"{i}: HEADERS: {headers}")
         elif re.match(r"^\d+\. \w+", line):
             # found a new item
             is_item = True
@@ -187,26 +191,26 @@ def stitch_lines(input_file):
             row = db[-1]
             row["items"].append(item)
 
-            print(f"{i}: ITEM:NEW: {item}")
+            print_(f"{i}: ITEM:NEW: {item}")
         elif re.match(QUANTITY_RE, line):
             # this is the data line (pricing, etc.)
             item["data"] = process_data(line)
             mark_item_complete(item)
-            # print(f"{i}: DATA:REGEX'D: {item["data"]}")
-            # print(f"{i}: DATA: {line}")
+            # print_(f"{i}: DATA:REGEX'D: {item["data"]}")
+            # print_(f"{i}: DATA: {line}")
 
             # add to the most recent db row
             row = db[-1]
             row["items"].append(item)
 
-            print(f"{i}: ITEM:DATA: {item}")
+            print_(f"{i}: ITEM:DATA: {item}")
         elif line.startswith("Totals:"):
             # found a totals line
             is_item = False
             row = db[-1]
             row["totals"] = line
 
-            print(f"{i}: TOTALS: {line}")
+            print_(f"{i}: TOTALS: {line}")
         elif db:
             # is it another header?
             row = db[-1]
@@ -214,36 +218,36 @@ def stitch_lines(input_file):
             if headers:
                 row["headers"].extend(headers)
                 mark_row_complete(row)
-                print(f"{i}: ORPHAN:HEADERS: {headers}")
+                print_(f"{i}: ORPHAN:HEADERS: {headers}")
             # BEGIN: look for orphaned data items
             elif re.match(AGEL_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:COND: {line}")
+                print_(f"{i}: ORPHAN:COND: {line}")
             elif re.match(COND_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:COND: {line}")
+                print_(f"{i}: ORPHAN:COND: {line}")
             elif re.match(DEP_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:DEPR: {line}")
+                print_(f"{i}: ORPHAN:DEPR: {line}")
             elif re.match(DEPTAIL_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
+                print_(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
             elif re.search(DEPREC_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:DEPREC: {line}")
+                print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.search(DEPREC_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:DEPREC: {line}")
+                print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.match(ACV_RE, line):
                 is_item = False
-                print(f"{i}: ORPHAN:DEPREC: {line}")
+                print_(f"{i}: ORPHAN:DEPREC: {line}")
             # END: look for orphaned data items
             elif is_item:
                 # hopefully it's another description line
                 item = get_last_item(db, i)
                 if item:
                     item["desc"].append(line)
-                    print(f"{i}: ITEM:DESC: {item}")
+                    print_(f"{i}: ITEM:DESC: {item}")
                 else:
                     skip = True
             elif line.startswith("Orig"):
@@ -252,7 +256,7 @@ def stitch_lines(input_file):
                 item = get_last_item(db, i)
                 if item:
                     item["desc"].append(line)
-                    print(f"{i}: ITEM:DESC:ORIG: {item}")
+                    print_(f"{i}: ITEM:DESC:ORIG: {item}")
                 else:
                     skip = True
             else:
@@ -261,7 +265,7 @@ def stitch_lines(input_file):
             skip = True
 
         if skip:
-            print(f"{i}: SKIPPED: {line}")
+            print_(f"{i}: SKIPPED: {line}")
             skip = False
 
 if __name__ == "__main__":
