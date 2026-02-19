@@ -3,9 +3,14 @@ import re
 import sys
 from more_itertools import peekable
 
+PRINT_ON = True
 def print_(str):
-    print(str)
-    None
+    if "ORPHAN" in str and not "HEADER" in str:
+        return
+    if PRINT_ON:
+        print(str)
+    else:
+        return
 
 def next_(cursor, i):
     return (next(cursor), i + 1)
