@@ -267,7 +267,7 @@ def stitch_lines(input_file):
                 print_(f"{i}: ORPHAN:DEPR: {line}")
             elif re.match(DEPTAIL_RE, line):
                 upsert_orphan(orphans, "DEPTAIL", line)
-                print_(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
+                print_(f"{i}: ORPHAN:DEPTAIL: {line}")
             elif re.search(DEPREC_RE, line):
                 upsert_orphan(orphans, "DEPREC", line)
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
