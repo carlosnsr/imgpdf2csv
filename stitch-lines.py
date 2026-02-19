@@ -39,6 +39,9 @@ def make_db_row(type_):
                     # complete if len(data segments) matches EXPECTED_DATA_SEGS
                     # incomplete if < EXPECTED_DATA_SEGS
                         # if find an item field later on, add it to the items
+        orphaned_data=[],
+            # collection of orphan data items found when parsing the above items
+                # optimistically grouped by tag
         totals=""
     )
 
@@ -190,6 +193,15 @@ def stitch_lines(input_file):
 
         if cursor.peek("").startswith("QUANTITY"):
             # found a header line
+
+            # close out the current row (if any)
+            if db:
+                row = db[-1]
+                # add orphans, then reset orphans
+                row["orphaned_data"] = orphans
+                print_(f"{i}: CLOSURE: {orphans}")
+                orphans = []
+
             # is_item = False # an item could be interrupted by a header
             type_ = line
             row = make_db_row(type_)
