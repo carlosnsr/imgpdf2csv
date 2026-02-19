@@ -229,7 +229,7 @@ def stitch_lines(input_file):
             row["items"].append(item)
 
             print_(f"{i}: ITEM:NEW: {item}")
-        elif re.match(QUANTITY_RE, line):
+        elif re.search(QUANTITY_RE, line):
             # this is the data line (pricing, etc.)
             # add it to the most recent item
             item = get_last_item(db, i)
