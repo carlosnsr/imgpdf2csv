@@ -23,16 +23,16 @@ def make_db_row(type_):
         is_headers_complete=False,
         is_complete=False,
             # False if:
-                # if len(headers) is not 10,
-                # if len(any item) is not X
+                # if len(headers) is not EXPECTED_HEADERS,
+                # if len(any item) is not EXPECTED_DATA_SEGS
         headers=[],
         items=[],
             # each item:
                 # description: array of strings
                 # data: array of data segments
                 # status:
-                    # complete if len(data segments) matches X
-                    # incomplete if < X
+                    # complete if len(data segments) matches EXPECTED_DATA_SEGS
+                    # incomplete if < EXPECTED_DATA_SEGS
                         # if find an item field later on, add it to the items
         totals=""
     )
@@ -222,7 +222,7 @@ def stitch_lines(input_file):
             # BEGIN: look for orphaned data items
             elif re.match(AGEL_RE, line):
                 is_item = False
-                print_(f"{i}: ORPHAN:COND: {line}")
+                print_(f"{i}: ORPHAN:AGEL: {line}")
             elif re.match(COND_RE, line):
                 is_item = False
                 print_(f"{i}: ORPHAN:COND: {line}")
