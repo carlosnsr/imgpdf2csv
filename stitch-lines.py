@@ -37,6 +37,23 @@ def make_db_row(type_):
         totals=""
     )
 
+def make_orphan_row(tag, line):
+    return dict(
+        tag=tag,
+        orphs=[line]
+    )
+
+def upsert_orphan(orphans, tag, line):
+    new_row = make_orphan_row(tag, line)
+    if orphans:
+        last_orphan = orphans[-1]
+        if last_orphan["tag"] == tag:
+            last_orphan["orphs"].append(line)
+        else:
+            orphans.append(new_row)
+    else:
+        orphans.append(new_row)
+
 def get_last_item(db, i):
     if not db:
         print(f"{i}: ERROR: no DB")
@@ -161,6 +178,7 @@ def stitch_lines(input_file):
     i = 0
     is_item = False
     skip = False
+    orphans = []
     # run through once collecting headers
     while cursor:
         line, i = next_(cursor, i)
@@ -221,16 +239,22 @@ def stitch_lines(input_file):
                 print_(f"{i}: ORPHAN:HEADERS: {headers}")
             # BEGIN: look for orphaned data items
             elif re.match(AGEL_RE, line):
+                upsert_orphan(orphans, "AGEL", line)
                 print_(f"{i}: ORPHAN:AGEL: {line}")
             elif re.match(COND_RE, line):
+                upsert_orphan(orphans, "COND", line)
                 print_(f"{i}: ORPHAN:COND: {line}")
             elif re.match(DEP_RE, line):
+                upsert_orphan(orphans, "DEP", line)
                 print_(f"{i}: ORPHAN:DEPR: {line}")
             elif re.match(DEPTAIL_RE, line):
+                upsert_orphan(orphans, "DEPTAIL", line)
                 print_(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
             elif re.search(DEPREC_RE, line):
+                upsert_orphan(orphans, "DEPREC", line)
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.match(ACV_RE, line):
+                upsert_orphan(orphans, "ACV", line)
                 print_(f"{i}: ORPHAN:ACV: {line}")
             # END: look for orphaned data items
             elif is_item:
