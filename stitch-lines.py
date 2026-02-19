@@ -231,14 +231,12 @@ def stitch_lines(input_file):
             print_(f"{i}: ITEM:NEW: {item}")
         elif re.match(QUANTITY_RE, line):
             # this is the data line (pricing, etc.)
+            # add it to the most recent item
+            item = get_last_item(db, i)
             item["data"] = process_data(line)
             mark_item_complete(item)
             # print_(f"{i}: DATA:REGEX'D: {item["data"]}")
             # print_(f"{i}: DATA: {line}")
-
-            # add to the most recent db row
-            row = db[-1]
-            row["items"].append(item)
 
             print_(f"{i}: ITEM:DATA: {item}")
         elif line.startswith("Totals:"):
