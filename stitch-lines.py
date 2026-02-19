@@ -41,7 +41,7 @@ def get_last_item(db, i):
     row = db[-1]
     # could have been interrupted by a new header
     if not row["items"]:
-        print(f"{i}: INFO: interrupted by header")
+        # print(f"{i}: INFO: interrupted by header")
         row = db[-2]
 
     if row["items"]:
@@ -189,11 +189,10 @@ def stitch_lines(input_file):
             print(f"{i}: ITEM:NEW: {item}")
         elif re.match(QUANTITY_RE, line):
             # this is the data line (pricing, etc.)
-            segs = process_data(line)
-            # print(f"{i}: DATA:REGEX'D: {segs}")
-            # print(f"{i}: DATA: {line}")
-            item["data"] = segs
+            item["data"] = process_data(line)
             mark_item_complete(item)
+            # print(f"{i}: DATA:REGEX'D: {item["data"]}")
+            # print(f"{i}: DATA: {line}")
 
             # add to the most recent db row
             row = db[-1]

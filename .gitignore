@@ -1,5 +1,7 @@
 venv/
 __pycache__/
 extracted_tables/
+*.bak
+*.log
 *.pdf
 temp_page_*.jpg
