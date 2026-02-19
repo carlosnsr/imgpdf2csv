@@ -1,9 +1,10 @@
 import csv
+import pprint
 import re
 import sys
 from more_itertools import peekable
 
-PRINT_ON = True
+PRINT_ON = False
 def print_(str):
     if "ORPHAN" in str and not "HEADER" in str:
         return
@@ -302,8 +303,11 @@ def stitch_lines(input_file):
             print_(f"{i}: SKIPPED: {line}")
             skip = False
 
+    return db
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python parse_to_csv.py <filename>")
     else:
-        stitch_lines(sys.argv[1])
+        db = stitch_lines(sys.argv[1])
+        pprint.pprint(db)
