@@ -155,7 +155,7 @@ def stitch_lines(input_file):
     db = []
     i = 0
     is_item = False
-    skipped = False
+    skip = False
     # run through once collecting headers
     while cursor:
         line, i = next_(cursor, i)
@@ -232,7 +232,7 @@ def stitch_lines(input_file):
                     item["desc"].append(line)
                     print(f"{i}: ITEM:DESC: {item}")
                 else:
-                    skipped = True
+                    skip = True
             elif line.startswith("Orig"):
                 # deffo part of an item description
                 is_item = True
@@ -241,15 +241,15 @@ def stitch_lines(input_file):
                     item["desc"].append(line)
                     print(f"{i}: ITEM:DESC:ORIG: {item}")
                 else:
-                    skipped = True
+                    skip = True
             else:
-                skipped = True
+                skip = True
         else:
-            skipped = True
+            skip = True
 
-        if skipped:
+        if skip:
             print(f"{i}: SKIPPED: {line}")
-            skipped = False
+            skip = False
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
