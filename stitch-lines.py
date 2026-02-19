@@ -235,9 +235,6 @@ def stitch_lines(input_file):
             elif re.search(DEPREC_RE, line):
                 is_item = False
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
-            elif re.search(DEPREC_RE, line):
-                is_item = False
-                print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.match(ACV_RE, line):
                 is_item = False
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
