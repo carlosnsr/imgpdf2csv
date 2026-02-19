@@ -5,8 +5,10 @@ import sys
 from more_itertools import peekable
 
 PRINT_ON = False
+PRINT_ORPHANS = False
 def print_(str):
-    if "ORPHAN" in str and not "HEADER" in str:
+    if PRINT_ORPHANS and "ORPHAN" in str and not "HEADER" in str:
+        print(str)
         return
     if PRINT_ON:
         print(str)
