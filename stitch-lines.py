@@ -79,7 +79,8 @@ ACV_RE = rf"(?P<acv>{CURR_RE})"
 CRUFT_RE = r"[|_= —-]*"
 AGEL_RE = rf"{CRUFT_RE}(?P<agel>\d+(?:\.\d+)*/(?:\d+ ?yrs|NA))"
 COND_RE = rf"{CRUFT_RE}(?P<cond>New|Below Avg\.|Above Avg\.|Avg\.)"
-DEP_RE = r"(?P<dep>\d+(?:\.\d+)*%(?: \[M\])*)"
+DEPTAIL_RE = r"\[M\]"
+DEP_RE = rf"(?P<dep>\d+(?:\.\d+)*%(?: {DEPTAIL_RE})*)"
 
 MIN_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE}"
 TO_AGEL_RE = rf"{MIN_RE} {RCV_RE}\.? +{AGEL_RE}"
@@ -214,19 +215,31 @@ def stitch_lines(input_file):
                 row["headers"].extend(headers)
                 mark_row_complete(row)
                 print(f"{i}: ORPHAN:HEADERS: {headers}")
+            # BEGIN: look for orphaned data items
+            elif re.match(AGEL_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:COND: {line}")
+            elif re.match(COND_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:COND: {line}")
+            elif re.match(DEP_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:DEPR: {line}")
+            elif re.match(DEPTAIL_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
+            elif re.search(DEPREC_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:DEPREC: {line}")
+            elif re.search(DEPREC_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:DEPREC: {line}")
+            elif re.match(ACV_RE, line):
+                is_item = False
+                print(f"{i}: ORPHAN:DEPREC: {line}")
+            # END: look for orphaned data items
             elif is_item:
                 # hopefully it's another description line
-                # but first check if it's an orphan
-                if re.match(DEP_RE, line):
-                    is_item = False
-                    print(f"{i}: BLIP:DEPR: {line}")
-                    continue
-
-                if re.match(COND_RE, line):
-                    is_item = False
-                    print(f"{i}: BLIP:COND: {line}")
-                    continue
-
                 item = get_last_item(db, i)
                 if item:
                     item["desc"].append(line)
