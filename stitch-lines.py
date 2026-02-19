@@ -221,22 +221,16 @@ def stitch_lines(input_file):
                 print_(f"{i}: ORPHAN:HEADERS: {headers}")
             # BEGIN: look for orphaned data items
             elif re.match(AGEL_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:AGEL: {line}")
             elif re.match(COND_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:COND: {line}")
             elif re.match(DEP_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:DEPR: {line}")
             elif re.match(DEPTAIL_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:DEPTAILDEPR: {line}")
             elif re.search(DEPREC_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.match(ACV_RE, line):
-                is_item = False
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
             # END: look for orphaned data items
             elif is_item:
