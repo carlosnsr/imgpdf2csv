@@ -30,6 +30,9 @@ def clean_file(filename):
     for line in remaining_lines:
         stripped_line = line.strip()
 
+        if "Summary for Contents" in stripped_line:
+            break
+
         # 2. Block Removal Logic (Farmers Insurance -> Import Template)
         # Check if we hit the start of the junk block
         if stripped_line.startswith("Soa Farmers Insurance Exchange") or stripped_line.startswith("Farmers Insurance Exchange"):
