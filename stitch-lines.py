@@ -231,7 +231,7 @@ def stitch_lines(input_file):
             elif re.search(DEPREC_RE, line):
                 print_(f"{i}: ORPHAN:DEPREC: {line}")
             elif re.match(ACV_RE, line):
-                print_(f"{i}: ORPHAN:DEPREC: {line}")
+                print_(f"{i}: ORPHAN:ACV: {line}")
             # END: look for orphaned data items
             elif is_item:
                 # hopefully it's another description line
