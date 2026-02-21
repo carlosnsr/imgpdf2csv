@@ -121,6 +121,7 @@ TO_COND_RE = rf"{TO_AGEL_RE} {COND_RE}"
 FULL_RE = rf"{TO_COND_RE} {DEP_RE} {DEPREC_RE} {ACV_RE}"
 def process_data(line):
     # clean up OCR issues
+    line = line.replace('[IM]', '[M]')
     line = re.sub(r"/[l\\] ?yrs", "/1 yrs", line)
     line = re.sub(r"/[S] ?yrs", "/5 yrs", line)
     line = re.sub(r"/S5 ?yrs", "/5 yrs", line)
@@ -268,6 +269,8 @@ def stitch_lines(input_file):
                 upsert_orphan(orphans, "DEP", line)
                 print_(f"{i}: ORPHAN:DEPR: {line}")
             elif re.match(DEPTAIL_RE, line):
+                # remove cruft
+                line = line.replace('[IM]', '[M]')
                 upsert_orphan(orphans, "DEPTAIL", line)
                 print_(f"{i}: ORPHAN:DEPTAIL: {line}")
             elif re.search(DEPREC_RE, line):
