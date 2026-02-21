@@ -112,7 +112,7 @@ ACV_RE = rf"(?P<acv>{CURR_RE})"
 CRUFT_RE = r"[|_= —-]*"
 AGEL_RE = rf"{CRUFT_RE}(?P<agel>\d+(?:\.\d+)*/(?:\d+ ?yrs|NA))"
 COND_RE = rf"{CRUFT_RE}(?P<cond>New|Below Avg\.|Above Avg\.|Avg\.)"
-DEPTAIL_RE = r"\[M\]"
+DEPTAIL_RE = r"\[I?M\]"
 DEP_RE = rf"(?P<dep>\d+(?:\.\d+)*%(?: {DEPTAIL_RE})*)"
 
 MIN_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE}"
