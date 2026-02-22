@@ -85,7 +85,7 @@ def get_last_item(db, i):
         return None
 
 EXPECTED_HEADERS = 10
-EXPECTED_DATA_SEGS = 10 # 9 actual data, 1 state enum
+EXPECTED_DATA_SEGS = 11 # 1 state enum, 9 actual data, 1 data line
 
 def mark_row_complete(db_row):
     is_headers_complete = len(db_row["headers"]) == EXPECTED_HEADERS
@@ -119,8 +119,8 @@ MIN_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE}"
 TO_AGEL_RE = rf"{MIN_RE} {RCV_RE}\.? +{AGEL_RE}"
 TO_COND_RE = rf"{TO_AGEL_RE} {COND_RE}"
 FULL_RE = rf"{TO_COND_RE} {DEP_RE} {DEPREC_RE} {ACV_RE}"
-def process_data(line):
-    # clean up OCR issues
+
+def clean_ocr_issues(line):
     line = line.replace('[IM]', '[M]')
     line = re.sub(r"/[l\\] ?yrs", "/1 yrs", line)
     line = re.sub(r"/[S] ?yrs", "/5 yrs", line)
@@ -128,7 +128,10 @@ def process_data(line):
     line = re.sub(r"[lI]/(\d+) ?yrs", r"1/\1 yrs", line)
     line = re.sub(r"[S]/(\d+) ?yrs", r"5/\1 yrs", line)
     line = re.sub(rf"yrs{CRUFT_RE} ?", r"yrs ", line)
+    return line
 
+def process_data(line):
+    line = clean_ocr_issues(line)
     m = re.search(FULL_RE, line)
     if m:
         return [
@@ -141,7 +144,8 @@ def process_data(line):
             m.group("cond"),
             m.group("dep"),
             m.group("deprec"),
-            m.group("acv")
+            m.group("acv"),
+            ("LINE", line)
         ]
 
     m = re.search(TO_COND_RE, line)
@@ -154,7 +158,7 @@ def process_data(line):
             m.group("rcv"),
             m.group("agel"),
             m.group("cond"),
-            line
+            ("LINE", line)
         ]
 
     m = re.search(TO_AGEL_RE, line)
@@ -166,7 +170,7 @@ def process_data(line):
             m.group("tax"),
             m.group("rcv"),
             m.group("agel"),
-            line
+            ("LINE", line)
         ]
 
     m = re.search(MIN_RE, line)
@@ -176,10 +180,10 @@ def process_data(line):
             m.group("quan"),
             m.group("unit"),
             m.group("tax"),
-            line
+            ("LINE", line)
         ]
 
-    return ["PART:NONE", line]
+    return ["PART:NONE", ("LINE", line)]
 
 def stitch_lines(input_file):
     with open(input_file, 'r') as f:
