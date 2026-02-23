@@ -322,8 +322,7 @@ def stitch_lines(input_file):
                 if item:
                     item["desc"].append(line)
                     print_(f"{i}: ITEM:DESC: {item}")
-                else:
-                    skip = True
+                    continue
             elif line.startswith("Orig"):
                 # deffo part of an item description
                 is_item = True
@@ -331,10 +330,9 @@ def stitch_lines(input_file):
                 if item:
                     item["desc"].append(line)
                     print_(f"{i}: ITEM:DESC:ORIG: {item}")
-                else:
-                    skip = True
-            else:
-                skip = True
+                    continue
+
+            skip = True
         else:
             skip = True
 
