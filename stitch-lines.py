@@ -364,12 +364,13 @@ def selected_incompletes(db):
     return incompletes
 
 def stitch_orphans(orphans):
-    pprint.pprint(orphans)
     stitched = []
     if not orphans:
         return stitched
+    pprint.pprint(orphans)
 
-    flattened = [item for orphs, line in orphans for item in orphs]
+    # flatten orphans, skipping all deptails
+    flattened = [item for orphs, line in orphans for item in orphs if item[0] != "deptail"]
     tag0 = flattened[0][0]
     i0 = DATA_TAGS.index(tag0)
 
@@ -384,17 +385,15 @@ def stitch_orphans(orphans):
         i = DATA_TAGS.index(tag)
         assert i == i0, f"Expect ({i}, {DATA_TAGS[i]}) to equal ({i0}, {tag0})"
         it = enumerate(flattened)
-        skip_next = False
-        for i in range(i0, len(DATA_TAGS)):
-            if skip_next:
-                skip_next = False
+        for dtag in DATA_TAGS[i:]:
+            if dtag == "deptail":
+                norph.append((dtag, '[?]'))
                 continue
 
-            dtag = DATA_TAGS[i]
             match = next(((mi, mitem) for mi, mitem in it if mitem[0] == dtag), None)
             if match:
                 mi, (mtag, mval) = match
-                # skip 'deptail' if 'dep' isn't a maximal value
+                # skip 'deptail' if is 'dep'
                 if mtag == 'dep' and mval != '75%':
                     skip_next = True
                 norph.append((mtag, mval))
