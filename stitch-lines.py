@@ -163,12 +163,18 @@ def get_data_re():
 
 # def make_regex(
 def extract_data(line):
+    line = clean_ocr_issues(line)
+
+    # handling lone dep's that confuse the unit/acv regex
+    match = re.match(DEP_RE, line)
+    if match:
+        return [("dep", match.group("dep"))]
+
     match = re.search(get_data_re(), line)
     if match:
         data = match.groupdict()
 
         # if no quantity, then unit is actually the acv
-        # print(f"DATA: {data}")
         if data["quan"] is None and not data["unit"] is None:
             data["acv"] = data["unit"]
             data["unit"] = None
