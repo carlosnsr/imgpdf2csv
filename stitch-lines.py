@@ -49,22 +49,9 @@ def make_db_row(type_):
         totals=""
     )
 
-def make_orphan_row(tag, line):
-    return dict(
-        tag=tag,
-        orphs=[line]
-    )
-
-def upsert_orphan(orphans, tag, line):
-    new_row = make_orphan_row(tag, line)
-    if orphans:
-        last_orphan = orphans[-1]
-        if last_orphan["tag"] == tag:
-            last_orphan["orphs"].append(line)
-        else:
-            orphans.append(new_row)
-    else:
-        orphans.append(new_row)
+def collect_orphans(orphans, data, line):
+    # preserve the order of insertion for now
+    orphans.append((data, line))
 
 def get_last_item(db, i):
     if not db:
@@ -325,6 +312,7 @@ def stitch_lines(input_file):
 
             data = extract_data(line)
             if data:
+                collect_orphans(orphans, data, line)
                 print_(f"{i}: ORPHAN:EXTRACTED: {data} LINE: {line}")
                 continue
 
