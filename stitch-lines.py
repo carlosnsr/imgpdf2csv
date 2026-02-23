@@ -102,23 +102,26 @@ def extract_headers(line):
 
 # Regexs to help process the data line
 CURR_RE = r"\d+(?:,\d+)*\.\d+"
+CRUFT_RE = r"[|_= —-]*"
+
 QUANTITY_RE = rf"(?P<quan>{CURR_RE} EA)"
 UNIT_RE = rf"(?P<unit>{CURR_RE})"
-RCV_RE = rf"(?P<rcv>{CURR_RE})"
 TAX_RE = rf"(?P<tax>{CURR_RE})"
-DEPREC_RE = rf"(?P<deprec>\({CURR_RE}\))"
-ACV_RE = rf"(?P<acv>{CURR_RE})"
-
-CRUFT_RE = r"[|_= —-]*"
+RCV_RE = rf"(?P<rcv>{CURR_RE})"
 AGEL_RE = rf"{CRUFT_RE}(?P<agel>\d+(?:\.\d+)*/(?:\d+ ?yrs|NA))"
 COND_RE = rf"{CRUFT_RE}(?P<cond>New|Below Avg\.|Above Avg\.|Avg\.)"
-DEPTAIL_RE = r"\[I?M\]"
-DEP_RE = rf"(?P<dep>\d+(?:\.\d+)*%(?: {DEPTAIL_RE})*)"
+DEP_RE = rf"(?P<dep>\d+(?:\.\d+)*%)"
+DEPTAIL_RE = r"(?P<deptail>\[I?M\])"
+DEPREC_RE = rf"(?P<deprec>\({CURR_RE}\))"
+ACV_RE = rf"(?P<acv>{CURR_RE})"
 
 MIN_RE = rf"{QUANTITY_RE} {UNIT_RE} {TAX_RE}"
 TO_AGEL_RE = rf"{MIN_RE} {RCV_RE}\.? +{AGEL_RE}"
 TO_COND_RE = rf"{TO_AGEL_RE} {COND_RE}"
-FULL_RE = rf"{TO_COND_RE} {DEP_RE} {DEPREC_RE} {ACV_RE}"
+FULL_RE = rf"{TO_COND_RE} {DEP_RE}\s+(?:{DEPTAIL_RE}\s*)?{DEPREC_RE} {ACV_RE}"
+
+DATA_RE = None # gets set in extract_data
+DATA_TAGS = ["quan", "unit", "tax", "rcv", "agel", "cond", "dep", "deptail", "deprec", "acv"]
 
 def clean_ocr_issues(line):
     line = line.replace('[IM]', '[M]')
@@ -130,10 +133,60 @@ def clean_ocr_issues(line):
     line = re.sub(rf"yrs{CRUFT_RE} ?", r"yrs ", line)
     return line
 
+def get_data_re():
+    global DATA_RE
+
+    if DATA_RE:
+        return DATA_RE
+
+    patterns = {
+        "quan": QUANTITY_RE,
+        "unit": UNIT_RE,
+        "tax": TAX_RE,
+        "rcv": RCV_RE,
+        "agel": AGEL_RE,
+        "cond": COND_RE,
+        "dep": DEP_RE,
+        "deptail": DEPTAIL_RE,
+        "deprec": DEPREC_RE,
+        "acv": ACV_RE
+    }
+
+    # combined, and each block is optional
+    regex = ""
+    for tag in DATA_TAGS:
+        regex += rf"(?:{patterns[tag]}\s*)?"
+
+    DATA_RE = regex
+
+    return DATA_RE
+
+# def make_regex(
+def extract_data(line):
+    match = re.search(get_data_re(), line)
+    if match:
+        data = match.groupdict()
+
+        # if no quantity, then unit is actually the acv
+        # print(f"DATA: {data}")
+        if data["quan"] is None and not data["unit"] is None:
+            data["acv"] = data["unit"]
+            data["unit"] = None
+
+        # Extract matches and filter out None values (missing fields)
+        results = [(k, v) for k, v in data.items() if v is not None]
+        return results
+
+    return []
+
 def process_data(line):
     line = clean_ocr_issues(line)
     m = re.search(FULL_RE, line)
     if m:
+        dep = m.group("dep")
+        if m.group("deptail"):
+            dep = f"{dep} {m.group("deptail")}"
+
         return [
             "FULL",
             m.group("quan"),
@@ -142,7 +195,7 @@ def process_data(line):
             m.group("rcv"),
             m.group("agel"),
             m.group("cond"),
-            m.group("dep"),
+            dep,
             m.group("deprec"),
             m.group("acv"),
             ("LINE", line)
@@ -262,29 +315,14 @@ def stitch_lines(input_file):
                 row["orphaned_headers"].extend(headers)
                 mark_row_complete(row)
                 print_(f"{i}: ORPHAN:HEADERS: {headers}")
-            # BEGIN: look for orphaned data items
-            elif re.match(AGEL_RE, line):
-                upsert_orphan(orphans, "AGEL", line)
-                print_(f"{i}: ORPHAN:AGEL: {line}")
-            elif re.match(COND_RE, line):
-                upsert_orphan(orphans, "COND", line)
-                print_(f"{i}: ORPHAN:COND: {line}")
-            elif re.match(DEP_RE, line):
-                upsert_orphan(orphans, "DEP", line)
-                print_(f"{i}: ORPHAN:DEPR: {line}")
-            elif re.match(DEPTAIL_RE, line):
-                # remove cruft
-                line = line.replace('[IM]', '[M]')
-                upsert_orphan(orphans, "DEPTAIL", line)
-                print_(f"{i}: ORPHAN:DEPTAIL: {line}")
-            elif re.search(DEPREC_RE, line):
-                upsert_orphan(orphans, "DEPREC", line)
-                print_(f"{i}: ORPHAN:DEPREC: {line}")
-            elif re.match(ACV_RE, line):
-                upsert_orphan(orphans, "ACV", line)
-                print_(f"{i}: ORPHAN:ACV: {line}")
-            # END: look for orphaned data items
-            elif is_item:
+                continue
+
+            data = extract_data(line)
+            if data:
+                print_(f"{i}: ORPHAN:EXTRACTED: {data} LINE: {line}")
+                continue
+
+            if is_item:
                 # hopefully it's another description line
                 item = get_last_item(db, i)
                 if item:
