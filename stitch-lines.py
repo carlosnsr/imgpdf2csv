@@ -1,3 +1,4 @@
+import copy
 import csv
 import pprint
 import re
@@ -51,7 +52,7 @@ def make_db_row(type_):
 
 def collect_orphans(orphans, data, line):
     # preserve the order of insertion for now
-    orphans.append((data, line))
+    orphans.append((data, ("LINE", line)))
 
 def get_last_item(db, i):
     if not db:
@@ -356,9 +357,61 @@ def selected_incompletes(db):
                 selected[key] = row[key]
             selected["items"] = incomplete_items
 
+            stitched = stitch_orphans(selected["orphaned_data"])
+
             incompletes.append(selected)
 
     return incompletes
+
+def stitch_orphans(orphans):
+    pprint.pprint(orphans)
+    stitched = []
+    if not orphans:
+        return stitched
+
+    flattened = [item for orphs, line in orphans for item in orphs]
+    tag0 = flattened[0][0]
+    i0 = DATA_TAGS.index(tag0)
+
+    norphs = []
+    while flattened:
+        print("flattened:")
+        print(flattened)
+        tag, _ = flattened[0]
+        if tag == tag0:
+            norph = []
+
+        i = DATA_TAGS.index(tag)
+        assert i == i0, f"Expect ({i}, {DATA_TAGS[i]}) to equal ({i0}, {tag0})"
+        it = enumerate(flattened)
+        skip_next = False
+        for i in range(i0, len(DATA_TAGS)):
+            if skip_next:
+                skip_next = False
+                continue
+
+            dtag = DATA_TAGS[i]
+            match = next(((mi, mitem) for mi, mitem in it if mitem[0] == dtag), None)
+            if match:
+                mi, (mtag, mval) = match
+                # skip 'deptail' if 'dep' isn't a maximal value
+                if mtag == 'dep' and mval != '75%':
+                    skip_next = True
+                norph.append((mtag, mval))
+                flattened[mi] = None
+
+        print("norph:")
+        print(norph)
+        norphs.append(norph)
+
+        flattened = [item for item in flattened if item is not None]
+
+    print("norphs:")
+    pprint.pprint(norphs)
+    print("stitched:")
+    pprint.pprint(stitched)
+    print("----------------------------------------")
+    return stitched
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
