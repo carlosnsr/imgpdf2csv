@@ -108,7 +108,8 @@ TO_AGEL_RE = rf"{MIN_RE} {RCV_RE}\.? +{AGEL_RE}"
 TO_COND_RE = rf"{TO_AGEL_RE} {COND_RE}"
 FULL_RE = rf"{TO_COND_RE} {DEP_RE}\s+(?:{DEPTAIL_RE}\s*)?{DEPREC_RE} {ACV_RE}"
 
-DATA_RE = None # gets set in extract_data
+ALL_DATA_RE = None # gets set in extract_data
+DEP_DATA_RE = None # gets set in extract_data
 DATA_TAGS = ["quan", "unit", "tax", "rcv", "agel", "cond", "dep", "deptail", "deprec", "acv"]
 
 def clean_ocr_issues(line):
@@ -121,11 +122,11 @@ def clean_ocr_issues(line):
     line = re.sub(rf"yrs{CRUFT_RE} ?", r"yrs ", line)
     return line
 
-def get_data_re():
-    global DATA_RE
+def get_all_data_re():
+    global ALL_DATA_RE
 
-    if DATA_RE:
-        return DATA_RE
+    if ALL_DATA_RE:
+        return ALL_DATA_RE
 
     patterns = {
         "quan": QUANTITY_RE,
@@ -145,28 +146,57 @@ def get_data_re():
     for tag in DATA_TAGS:
         regex += rf"(?:{patterns[tag]}\s*)?"
 
-    DATA_RE = regex
+    ALL_DATA_RE = regex
 
-    return DATA_RE
+    return ALL_DATA_RE
 
-# def make_regex(
+def get_dep_data_re():
+    global DEP_DATA_RE
+
+    if DEP_DATA_RE:
+        return DEP_DATA_RE
+
+    patterns = {
+        "dep": DEP_RE,
+        "deptail": DEPTAIL_RE,
+        "deprec": DEPREC_RE,
+        "acv": ACV_RE
+    }
+
+    # combined, and each block is optional
+    regex = ""
+    dep_i = DATA_TAGS.index("dep")
+    for tag in DATA_TAGS[dep_i:]:
+        regex += rf"(?:{patterns[tag]}\s*)?"
+
+    DEP_DATA_RE = regex
+
+    return DEP_DATA_RE
+
 def extract_data(line):
     line = clean_ocr_issues(line)
+    data = None
 
-    # handling lone dep's that confuse the unit/acv regex
-    match = re.match(DEP_RE, line)
-    if match:
-        return [("dep", match.group("dep"))]
+    # handling dep's that confuse the unit/acv regex
+    match = None
+    data = None
+    if re.match(DEP_RE, line):
+        match = re.match(get_dep_data_re(), line)
+        if match:
+            data = match.groupdict()
+    else:
+        match = re.search(get_all_data_re(), line)
+        if match:
+            data = match.groupdict()
 
-    match = re.search(get_data_re(), line)
-    if match:
-        data = match.groupdict()
+            # unit, tax, rcv, and acv all have the same regex
+            # good news is that, unit is never on its own, it's always part of (quan, unit, tax)
+            # so if no quantity, then unit is actually rcv or acv
+            if data["quan"] is None and not data["unit"] is None:
+                data["rcv_or_acv"] = data["unit"]
+                data["unit"] = None
 
-        # if no quantity, then unit is actually the acv
-        if data["quan"] is None and not data["unit"] is None:
-            data["acv"] = data["unit"]
-            data["unit"] = None
-
+    if data:
         # Extract matches and filter out None values (missing fields)
         results = [(k, v) for k, v in data.items() if v is not None]
         return results
