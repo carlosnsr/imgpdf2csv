@@ -37,6 +37,5 @@ pip install pytesseract pdf2image
 python imgpdf2txt.py docs/fire.pdf 7 > outputs/pages-7-onwards.out
 # generates cleaned_pages-7-onwards.out
 python trim-cruft.py outputs/pages-7-onwards.out
-mv cleaned_pages-7-onwards.out outputs/.
-python stitch-lines.py outputs/cleaned_pages-7-onwards.out
+python stitch-lines.py outputs/pages-7-onwards.out.cleaned.out
 ```
