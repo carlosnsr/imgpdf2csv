@@ -401,6 +401,25 @@ def stitch_orphans(orphans):
 
     # flatten orphans, skipping all deptails
     flattened = [item for orphs, line in orphans for item in orphs if item[0] != "deptail"]
+
+    # fix: unit and acv's can be confused for each other.  They only differ by their position
+    # rcv_or_acv's that come after dep are definitely acv's
+    # rcv_or_acv's that come before agel are definitely rcv's
+    transformed = []
+    after_deprec = False
+    for tag, val in flattened:
+        if not after_deprec and (tag == 'dep' or tag == 'deprec'):
+            after_deprec = True
+
+        if tag == 'rcv_or_acv':
+            if after_deprec:
+                transformed.append(('acv', val))
+            else:
+                transformed.append(('rcv', val))
+        else:
+            transformed.append((tag, val))
+    flattened[:] = transformed
+
     tag0 = flattened[0][0]
     i0 = DATA_TAGS.index(tag0)
 
