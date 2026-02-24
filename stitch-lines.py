@@ -373,25 +373,19 @@ def stitch_lines(input_file):
 
     return db
 
-def selected_incompletes(db):
-    incompletes = []
+def select_incomplete_rows(db):
+    incomplete_rows = []
     for row in db:
         # collect incomplete data, their headers, and their orphans
         incomplete_items = []
         for item in row["items"]:
             if not item["is_complete"]:
                 incomplete_items.append(item)
+
         if incomplete_items:
-            selected = make_db_row(row["type_"])
-            for key in ["headers", "orphaned_headers", "orphaned_data"]:
-                selected[key] = row[key]
-            selected["items"] = incomplete_items
+            incomplete_rows.append(row)
 
-            stitched = stitch_orphans(selected["orphaned_data"])
-
-            incompletes.append(selected)
-
-    return incompletes
+    return incomplete_rows
 
 def stitch_orphans(orphans):
     stitched = []
@@ -459,7 +453,8 @@ if __name__ == "__main__":
         print("Usage: python parse_to_csv.py <filename>")
     else:
         db = stitch_lines(sys.argv[1])
-        # pprint.pprint(db)
 
-        incompletes = selected_incompletes(db)
-        pprint.pprint(incompletes)
+        incomplete_rows = select_incomplete_rows(db)
+        .pprint(incomplete_rows)
+
+        pprint.pprint(db)
