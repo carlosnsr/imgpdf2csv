@@ -26,9 +26,9 @@ def make_item_row():
         is_complete=False
     )
 
-def make_db_row(type_):
+def make_db_row(title):
     return dict(
-        type_=type_, # type_: Living, etc.
+        title=title, # title: Living, etc.
         is_headers_complete=False,
         is_complete=False,
             # False if:
@@ -289,12 +289,12 @@ def stitch_lines(input_file):
                 orphans = []
 
             # is_item = False # an item could be interrupted by a header
-            type_ = line
-            row = make_db_row(type_)
+            title = line
+            row = make_db_row(title)
 
             # all the possible headers
             line, i = next_(cursor, i)
-            headers = [type_] + extract_headers(line)
+            headers = ["DESCRIPTION"] + extract_headers(line)
             # add to the db
             row["headers"] = headers
             mark_row_complete(row)
