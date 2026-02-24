@@ -4,7 +4,7 @@ import re
 
 EXCLUDES = {"fo\"", "FARMERS", "INSURANCE"}
 
-def clean_file(filename):
+def trim_cruft(filename):
     if not os.path.exists(filename):
         print(f"Error: File '{filename}' not found.")
         return
@@ -82,7 +82,7 @@ def clean_file(filename):
         cleaned_lines.append(line)
 
     # Save the output
-    output_filename = f"cleaned_{filename}"
+    output_filename = f"{filename}.cleaned.out"
     with open(output_filename, 'w') as f:
         f.writelines(cleaned_lines)
 
@@ -91,6 +91,6 @@ def clean_file(filename):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python clean_text.py <filename>")
+        print("Usage: python trim-cruft.py <filename>")
     else:
-        clean_file(sys.argv[1])
+        trim_cruft(sys.argv[1])
