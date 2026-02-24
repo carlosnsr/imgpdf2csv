@@ -397,7 +397,7 @@ def stitch_orphans(orphans):
     stitched = []
     if not orphans:
         return stitched
-    pprint.pprint(orphans)
+    # pprint.pprint(orphans)
 
     # flatten orphans, skipping all deptails
     flattened = [item for orphs, line in orphans for item in orphs if item[0] != "deptail"]
@@ -423,10 +423,7 @@ def stitch_orphans(orphans):
     tag0 = flattened[0][0]
     i0 = DATA_TAGS.index(tag0)
 
-    norphs = []
     while flattened:
-        print("flattened:")
-        print(flattened)
         tag, _ = flattened[0]
         if tag == tag0:
             norph = []
@@ -448,17 +445,13 @@ def stitch_orphans(orphans):
                 norph.append((mtag, mval))
                 flattened[mi] = None
 
-        print("norph:")
-        print(norph)
-        norphs.append(norph)
+        stitched.append(norph)
 
         flattened = [item for item in flattened if item is not None]
 
-    print("norphs:")
-    pprint.pprint(norphs)
-    print("stitched:")
-    pprint.pprint(stitched)
-    print("----------------------------------------")
+    # print("stitched:")
+    # pprint.pprint(stitched)
+    # print("----------------------------------------")
     return stitched
 
 if __name__ == "__main__":
