@@ -455,6 +455,10 @@ if __name__ == "__main__":
         db = stitch_lines(sys.argv[1])
 
         incomplete_rows = select_incomplete_rows(db)
-        .pprint(incomplete_rows)
+        # pprint.pprint(incomplete_rows)
+
+        for row in incomplete_rows:
+            stitched = stitch_orphans(row["orphaned_data"])
+            row["orphaned_data"] = stitched
 
         pprint.pprint(db)
