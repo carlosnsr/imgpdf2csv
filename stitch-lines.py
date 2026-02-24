@@ -50,9 +50,9 @@ def make_db_row(type_):
         totals=""
     )
 
-def collect_orphans(orphans, data, line):
+def collect_orphans(orphans, data, line, i):
     # preserve the order of insertion for now
-    orphans.append((data, ("LINE", line)))
+    orphans.append((data, (("LINE", line), ("LINE_#", i))))
 
 def get_last_item(db, i):
     if not db:
@@ -313,7 +313,7 @@ def stitch_lines(input_file):
 
             data = extract_data(line)
             if data:
-                collect_orphans(orphans, data, line)
+                collect_orphans(orphans, data, line, i)
                 print_(f"{i}: ORPHAN:EXTRACTED: {data} LINE: {line}")
                 continue
 
