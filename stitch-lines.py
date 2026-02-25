@@ -426,6 +426,7 @@ def stitch_orphans(orphans):
         assert i == i0, f"Expect ({i}, {DATA_TAGS[i]}) to equal ({i0}, {tag0})"
         it = enumerate(flattened)
         for dtag in DATA_TAGS[i:]:
+            # dumping all deptails
             if dtag == "deptail":
                 norph.append((dtag, '[?]'))
                 continue
@@ -433,9 +434,6 @@ def stitch_orphans(orphans):
             match = next(((mi, mitem) for mi, mitem in it if mitem[0] == dtag), None)
             if match:
                 mi, (mtag, mval) = match
-                # skip 'deptail' if is 'dep'
-                if mtag == 'dep' and mval != '75%':
-                    skip_next = True
                 norph.append((mtag, mval))
                 flattened[mi] = None
 
@@ -500,8 +498,6 @@ def convert_row_to_csv(writer, row):
             writer.writerow([])
             writer.writerow(TOTALS_HEADERS)
             writer.writerow([data["area"], data["tax"], data["rcv"], data["deprec"], data["acv"]])
-
-    return None
 
 def convert_to_csv(db):
     writer = csv.writer(sys.stdout)
