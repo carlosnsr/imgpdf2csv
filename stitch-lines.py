@@ -461,6 +461,9 @@ HEADERS = [
     'DEPREC.',
     'ACV'
 ]
+AREA_RE = r"(?P<area>\w+: \w+(?:\s+\w+)*)"
+TDEPREC_RE = rf"(?P<deprec>{CURR_RE})"  # like DEPREC_RE but without the parentheses
+TOTALS_RE = rf"{AREA_RE} {TAX_RE} {RCV_RE} {TDEPREC_RE} {ACV_RE}"
 TOTALS_HEADERS = [
     'AREA',
     'TAX',
@@ -488,6 +491,15 @@ def convert_to_csv(writer, row):
         fields = data[1:-1]
 
         writer.writerow([description] + fields + [data_status, line])
+
+    totals = row["totals"]
+    if totals:
+        match = re.search(TOTALS_RE, totals)
+        if match:
+            data = match.groupdict()
+            writer.writerow([])
+            writer.writerow(TOTALS_HEADERS)
+            writer.writerow([data["area"], data["tax"], data["rcv"], data["deprec"], data["acv"]])
 
     return None
 
