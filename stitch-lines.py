@@ -23,6 +23,7 @@ def make_item_row():
     return dict(
         desc=[],
         data=None,
+        stitch=None,
         is_complete=False
     )
 
@@ -446,6 +447,23 @@ def stitch_orphans(orphans):
     # print("----------------------------------------")
     return stitched
 
+def match_orphans_to_items(row):
+    orphans = row["orphaned_data"]
+    # pprint.pprint(row["items"][0])
+    # pprint.pprint(orphans)
+    assert orphans, "Error: orphans is empty"
+
+    it = iter(row["items"])
+    for orphs in orphans:
+        item = next((item for item in it if item["data"][0] != "FULL"), None)
+        if item:
+            item["stitch"] = orphs
+            orphs.append(("stitched", True))
+        else:
+            orphs.append(("stitched", False))
+
+    return None
+
 EXTRA_HEADERS = ["DATA_STATUS", "LINE"]
 HEADERS = [
     'DESCRIPTION',
@@ -516,11 +534,11 @@ if __name__ == "__main__":
         for row in incomplete_rows:
             stitched = stitch_orphans(row["orphaned_data"])
             row["orphaned_data"] = stitched
+            match_orphans_to_items(row)
 
-        # pprint.pprint(db)
+        pprint.pprint(db)
 
-        # TODO: match stitches to their possible items
         # TODO: skip empty rows
         # TODO: merge rows that have the same titles
 
-        convert_to_csv(db)
+        # convert_to_csv(db)
