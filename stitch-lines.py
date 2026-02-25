@@ -506,7 +506,7 @@ def convert_to_csv(db):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python parse_to_csv.py <filename>")
+        print("Usage: python stitch-lines.py <filename>")
     else:
         db = stitch_lines(sys.argv[1])
 
@@ -519,7 +519,7 @@ if __name__ == "__main__":
 
         # pprint.pprint(db)
 
-        # TODO: match orphans to their possible items
+        # TODO: match stitches to their possible items
         # TODO: skip empty rows
         # TODO: merge rows that have the same titles
 
