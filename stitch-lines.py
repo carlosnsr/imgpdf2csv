@@ -448,6 +448,28 @@ def stitch_orphans(orphans):
     # print("----------------------------------------")
     return stitched
 
+EXTRA_HEADERS = ["DATA_STATUS", "LINE"]
+def convert_to_csv(row):
+    writer = csv.writer(sys.stdout)
+    writer.writerow([f"Title: {row["title"]}"])
+
+    assert row["is_headers_complete"], "Error: Headers aren't complete"
+    assert len(row["headers"]) == EXPECTED_HEADERS, "Error: headers are missing"
+
+    writer.writerow(row["headers"] + EXTRA_HEADERS)
+
+    for item in row["items"]:
+        description = " | ".join(item["desc"])
+
+        data = item["data"]
+        data_status = data[0]
+        line = '"' + data[-1][1] + '"'
+        fields = data[1:-1]
+
+        writer.writerow([description] + fields + [data_status, line])
+
+    return None
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python parse_to_csv.py <filename>")
@@ -461,4 +483,9 @@ if __name__ == "__main__":
             stitched = stitch_orphans(row["orphaned_data"])
             row["orphaned_data"] = stitched
 
-        pprint.pprint(db)
+        # pprint.pprint(db)
+
+        row = db[0]
+        # pprint.pprint(row)
+
+        convert_to_csv(row)
