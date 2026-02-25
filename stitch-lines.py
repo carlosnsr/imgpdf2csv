@@ -518,8 +518,9 @@ if __name__ == "__main__":
 
         # pprint.pprint(db)
 
-        row = db[0]
-        # pprint.pprint(row)
+        # TODO: match orphans to their possible items
+        # TODO: skip empty rows
+        # TODO: merge rows that have the same titles
 
         writer = csv.writer(sys.stdout)
         for row in db:
