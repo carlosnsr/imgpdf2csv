@@ -461,9 +461,6 @@ HEADERS = [
     'DEPREC.',
     'ACV'
 ]
-AREA_RE = r"(?P<area>\w+: \w+(?:\s+\w+)*)"
-TDEPREC_RE = rf"(?P<deprec>{CURR_RE})"  # like DEPREC_RE but without the parentheses
-TOTALS_RE = rf"{AREA_RE} {TAX_RE} {RCV_RE} {TDEPREC_RE} {ACV_RE}"
 TOTALS_HEADERS = [
     'AREA',
     'TAX',
@@ -471,7 +468,10 @@ TOTALS_HEADERS = [
     'DEPREC.',
     'ACV'
 ]
-def convert_to_csv(writer, row):
+AREA_RE = r"(?P<area>\w+: \w+(?:\s+\w+)*)"
+TDEPREC_RE = rf"(?P<deprec>{CURR_RE})"  # like DEPREC_RE but without the parentheses
+TOTALS_RE = rf"{AREA_RE} {TAX_RE} {RCV_RE} {TDEPREC_RE} {ACV_RE}"
+def convert_row_to_csv(writer, row):
     writer.writerow([])
     writer.writerow([f"Title: {row["title"]}"])
 
@@ -503,6 +503,11 @@ def convert_to_csv(writer, row):
 
     return None
 
+def convert_to_csv(db):
+    writer = csv.writer(sys.stdout)
+    for row in db:
+        convert_row_to_csv(writer, row)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python parse_to_csv.py <filename>")
@@ -522,6 +527,4 @@ if __name__ == "__main__":
         # TODO: skip empty rows
         # TODO: merge rows that have the same titles
 
-        writer = csv.writer(sys.stdout)
-        for row in db:
-            convert_to_csv(writer, row)
+        convert_to_csv(db)
