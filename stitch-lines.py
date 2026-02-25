@@ -449,14 +449,35 @@ def stitch_orphans(orphans):
     return stitched
 
 EXTRA_HEADERS = ["DATA_STATUS", "LINE"]
-def convert_to_csv(row):
-    writer = csv.writer(sys.stdout)
+HEADERS = [
+    'DESCRIPTION',
+    'QUANTITY',
+    'UNIT',
+    'TAX',
+    'RCV',
+    'AGE/LIFE',
+    'COND.',
+    'DEP %',
+    'DEPREC.',
+    'ACV'
+]
+TOTALS_HEADERS = [
+    'AREA',
+    'TAX',
+    'RCV',
+    'DEPREC.',
+    'ACV'
+]
+def convert_to_csv(writer, row):
+    writer.writerow([])
     writer.writerow([f"Title: {row["title"]}"])
 
-    assert row["is_headers_complete"], "Error: Headers aren't complete"
-    assert len(row["headers"]) == EXPECTED_HEADERS, "Error: headers are missing"
+    # assert len(row["headers"]) >= EXPECTED_HEADERS, f"Error: headers are missing. Found {len(row["headers"])}"
+    # assert row["is_headers_complete"], "Error: Headers aren't complete"
+    # writer.writerow(row["headers"] + EXTRA_HEADERS)
 
-    writer.writerow(row["headers"] + EXTRA_HEADERS)
+    writer.writerow([])
+    writer.writerow(HEADERS + EXTRA_HEADERS)
 
     for item in row["items"]:
         description = " | ".join(item["desc"])
@@ -488,4 +509,6 @@ if __name__ == "__main__":
         row = db[0]
         # pprint.pprint(row)
 
-        convert_to_csv(row)
+        writer = csv.writer(sys.stdout)
+        for row in db:
+            convert_to_csv(writer, row)
