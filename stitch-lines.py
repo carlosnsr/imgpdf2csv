@@ -465,7 +465,7 @@ def match_orphans_to_items(row):
 
     return None
 
-EXTRA_HEADERS = ["DATA_STATUS", "LINE"]
+EXTRA_HEADERS = ["DATA_STATUS"]
 HEADERS = [
     'DESCRIPTION',
     'QUANTITY',
@@ -496,7 +496,6 @@ def convert_row_to_csv(writer, row):
     # assert row["is_headers_complete"], "Error: Headers aren't complete"
     # writer.writerow(row["headers"] + EXTRA_HEADERS)
 
-    writer.writerow([])
     writer.writerow(HEADERS + EXTRA_HEADERS)
 
     for item in row["items"]:
@@ -504,7 +503,7 @@ def convert_row_to_csv(writer, row):
 
         data = item["data"]
         data_status = data[0]
-        line = '"' + data[-1][1] + '"'
+        # line = '"' + data[-1][1] + '"'
         fields = data[1:-1]
 
         stitch = item["stitch"]
@@ -524,7 +523,7 @@ def convert_row_to_csv(writer, row):
         if missing > 0:
             fields.extend(["-->???<--"] * missing)
 
-        writer.writerow([description] + fields + [data_status, line])
+        writer.writerow([description] + fields + [data_status])
 
     totals = row["totals"]
     if totals:
