@@ -541,7 +541,7 @@ if __name__ == "__main__":
             row["orphaned_data"] = stitched
             match_orphans_to_items(row)
 
-        pprint.pprint(db)
+        # pprint.pprint(db)
 
         # TODO: skip empty rows
         # TODO: merge rows that have the same titles
