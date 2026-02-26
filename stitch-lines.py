@@ -506,6 +506,11 @@ def convert_row_to_csv(writer, row):
         line = '"' + data[-1][1] + '"'
         fields = data[1:-1]
 
+        stitch = item["stitch"]
+        if stitch:
+            bits = [token[1] for token in stitch[:-1]]
+            fields.extend(bits)
+
         writer.writerow([description] + fields + [data_status, line])
 
     totals = row["totals"]
@@ -541,4 +546,4 @@ if __name__ == "__main__":
         # TODO: skip empty rows
         # TODO: merge rows that have the same titles
 
-        # convert_to_csv(db)
+        convert_to_csv(db)
