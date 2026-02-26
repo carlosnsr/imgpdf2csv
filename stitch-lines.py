@@ -74,7 +74,8 @@ def get_last_item(db, i):
         return None
 
 EXPECTED_HEADERS = 10
-EXPECTED_DATA_SEGS = 11 # 1 state enum, 9 actual data, 1 data line
+ACTUAL_DATA_SEGS = 9
+EXPECTED_DATA_SEGS = ACTUAL_DATA_SEGS + 2 # 1 state enum, 9 actual data, 1 data line
 
 def mark_row_complete(db_row):
     is_headers_complete = len(db_row["headers"]) == EXPECTED_HEADERS
@@ -517,6 +518,11 @@ def convert_row_to_csv(writer, row):
                 del bits[i]
 
             fields.extend(bits)
+
+        # make sure it's the right length
+        missing = ACTUAL_DATA_SEGS - len(fields)
+        if missing > 0:
+            fields.extend(["-->???<--"] * missing)
 
         writer.writerow([description] + fields + [data_status, line])
 
