@@ -508,7 +508,14 @@ def convert_row_to_csv(writer, row):
 
         stitch = item["stitch"]
         if stitch:
+            # find deptail
+            i, deptail = next(((i, t) for i, t in enumerate(stitch) if t[0] == 'deptail'), (-1, None))
             bits = [token[1] for token in stitch[:-1]]
+            # merge deptail into dep
+            if deptail:
+                bits[i - 1] = bits[i - 1] + " " + deptail[1]
+                del bits[i]
+
             fields.extend(bits)
 
         writer.writerow([description] + fields + [data_status, line])
