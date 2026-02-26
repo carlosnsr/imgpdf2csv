@@ -465,7 +465,6 @@ def match_orphans_to_items(row):
 
     return None
 
-EXTRA_HEADERS = ["DATA_STATUS"]
 HEADERS = [
     'DESCRIPTION',
     'QUANTITY',
@@ -475,16 +474,11 @@ HEADERS = [
     'AGE/LIFE',
     'COND.',
     'DEP %',
-    'DEPREC.',
+    'DEPREC',
     'ACV'
 ]
-TOTALS_HEADERS = [
-    'AREA',
-    'TAX',
-    'RCV',
-    'DEPREC.',
-    'ACV'
-]
+EXTRA_HEADERS = ["DATA_STATUS"]
+ALL_HEADERS = HEADERS + EXTRA_HEADERS
 AREA_RE = r"(?P<area>\w+: \w+(?:\s+\w+)*)"
 TDEPREC_RE = rf"(?P<deprec>{CURR_RE})"  # like DEPREC_RE but without the parentheses
 TOTALS_RE = rf"{AREA_RE} {TAX_RE} {RCV_RE} {TDEPREC_RE} {ACV_RE}"
@@ -498,7 +492,7 @@ def convert_row_to_csv(writer, row, context):
         # assert len(row["headers"]) >= EXPECTED_HEADERS, f"Error: headers are missing. Found {len(row["headers"])}"
         # assert row["is_headers_complete"], "Error: Headers aren't complete"
         # writer.writerow(row["headers"] + EXTRA_HEADERS)
-        writer.writerow(HEADERS + EXTRA_HEADERS)
+        writer.writerow(ALL_HEADERS)
 
     for item in row["items"]:
         description = " | ".join(item["desc"])
@@ -532,9 +526,15 @@ def convert_row_to_csv(writer, row, context):
         match = re.search(TOTALS_RE, totals)
         if match:
             data = match.groupdict()
-            writer.writerow([])
-            writer.writerow(TOTALS_HEADERS)
-            writer.writerow([data["area"], data["tax"], data["rcv"], data["deprec"], data["acv"]])
+            # put each in the corresponding column
+            fields = [""] * len(ALL_HEADERS)
+            fields[0] = data["area"]
+            for tag in [key for key in data if key != "area"]:
+                i = HEADERS.index(tag.upper())
+                assert i
+                fields[i] = data[tag]
+
+            writer.writerow(fields)
 
 def convert_to_csv(db):
     writer = csv.writer(sys.stdout)
@@ -557,7 +557,5 @@ if __name__ == "__main__":
             match_orphans_to_items(row)
 
         # pprint.pprint(db)
-
-        # TODO: match Totals rows (i.e. TAX = TAX) so that it's easy to currency format the whole sheet
 
         convert_to_csv(db)
