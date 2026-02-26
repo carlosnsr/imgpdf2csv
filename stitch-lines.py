@@ -488,15 +488,17 @@ TOTALS_HEADERS = [
 AREA_RE = r"(?P<area>\w+: \w+(?:\s+\w+)*)"
 TDEPREC_RE = rf"(?P<deprec>{CURR_RE})"  # like DEPREC_RE but without the parentheses
 TOTALS_RE = rf"{AREA_RE} {TAX_RE} {RCV_RE} {TDEPREC_RE} {ACV_RE}"
-def convert_row_to_csv(writer, row):
-    writer.writerow([])
-    writer.writerow([f"Title: {row["title"]}"])
+def convert_row_to_csv(writer, row, context):
+    title = row["title"]
+    if title != context["title"]:
+        context["title"] = title
+        writer.writerow([])
+        writer.writerow([f"Title: {row["title"]}"])
 
-    # assert len(row["headers"]) >= EXPECTED_HEADERS, f"Error: headers are missing. Found {len(row["headers"])}"
-    # assert row["is_headers_complete"], "Error: Headers aren't complete"
-    # writer.writerow(row["headers"] + EXTRA_HEADERS)
-
-    writer.writerow(HEADERS + EXTRA_HEADERS)
+        # assert len(row["headers"]) >= EXPECTED_HEADERS, f"Error: headers are missing. Found {len(row["headers"])}"
+        # assert row["is_headers_complete"], "Error: Headers aren't complete"
+        # writer.writerow(row["headers"] + EXTRA_HEADERS)
+        writer.writerow(HEADERS + EXTRA_HEADERS)
 
     for item in row["items"]:
         description = " | ".join(item["desc"])
@@ -536,8 +538,9 @@ def convert_row_to_csv(writer, row):
 
 def convert_to_csv(db):
     writer = csv.writer(sys.stdout)
+    context = dict(title=None)
     for row in db:
-        convert_row_to_csv(writer, row)
+        convert_row_to_csv(writer, row, context)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -555,7 +558,6 @@ if __name__ == "__main__":
 
         # pprint.pprint(db)
 
-        # TODO: skip empty rows
-        # TODO: merge rows that have the same titles
+        # TODO: match Totals rows (i.e. TAX = TAX) so that it's easy to currency format the whole sheet
 
         convert_to_csv(db)
