@@ -2,7 +2,7 @@ import sys
 import os
 import re
 
-EXCLUDES = {"fo\"", "FARMERS", "INSURANCE"}
+EXCLUDES = {"fo\"", "FARMERS", "INSURANCE", "Contents"}
 
 def trim_cruft(filename):
     if not os.path.exists(filename):
@@ -58,10 +58,7 @@ def trim_cruft(filename):
         if "XactContents Import Template" in stripped_line:
             continue
 
-        if "COLIN_SHUKIE11" in stripped_line:
-            continue
-
-        if "COLIN SHUKIE11" in stripped_line:
+        if re.search(r"COLIN_SHUKIE\d+", stripped_line):
             continue
 
         if stripped_line.upper().startswith("CONTINUED - "):
