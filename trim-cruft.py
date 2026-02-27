@@ -33,7 +33,6 @@ def trim_cruft(filename):
         if "Summary for Contents" in stripped_line:
             break
 
-        # 2. Block Removal Logic (Farmers Insurance -> Import Template)
         # Check if we hit the start of the junk block
         if stripped_line.startswith("Soa Farmers Insurance Exchange") or stripped_line.startswith("Farmers Insurance Exchange"):
             in_skipped_block = True
@@ -45,7 +44,6 @@ def trim_cruft(filename):
                 in_skipped_block = False
             continue # Skip every line while the flag is True
 
-        # 3. Standard Cleaning
         # Remove empty lines
         if not stripped_line:
             continue

@@ -35,7 +35,6 @@ sudo dnf install tesseract tesseract-langpack-eng poppler-utils -y
 pip install pytesseract pdf2image
 
 python imgpdf2txt.py docs/fire.pdf 7 > outputs/pages-7-onwards.out
-# generates cleaned_pages-7-onwards.out
-python trim-cruft.py outputs/pages-7-onwards.out
+python trim-cruft.py outputs/pages-7-onwards.out # generates cleaned_pages-7-onwards.out
 python stitch-lines.py outputs/pages-7-onwards.out.cleaned.out
 ```
