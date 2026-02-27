@@ -547,15 +547,18 @@ if __name__ == "__main__":
         print("Usage: python stitch-lines.py <filename>")
     else:
         db = stitch_lines(sys.argv[1])
+        if True:
+            incomplete_rows = select_incomplete_rows(db)
+            # pprint.pprint(incomplete_rows)
 
-        incomplete_rows = select_incomplete_rows(db)
-        # pprint.pprint(incomplete_rows)
+            for row in incomplete_rows:
+                stitched = stitch_orphans(row["orphaned_data"])
+                row["orphaned_data"] = stitched
+                match_orphans_to_items(row)
 
-        for row in incomplete_rows:
-            stitched = stitch_orphans(row["orphaned_data"])
-            row["orphaned_data"] = stitched
-            match_orphans_to_items(row)
+            # pprint.pprint(db)
 
-        # pprint.pprint(db)
+            convert_to_csv(db)
+        else:
+            pprint.pprint(db)
 
-        convert_to_csv(db)
